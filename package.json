@@ -1,13 +1,14 @@
 {
     "name": "advantisui",
     "description": "AdvantisUI - a reusable component library and CLI",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "type": "module",
     "bin": {
         "advantisui": "./dist/index.js"
     },
     "files": [
-        "dist"
+        "dist",
+        "components.json"
     ],
     "keywords": [
         "react",

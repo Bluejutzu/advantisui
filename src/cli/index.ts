@@ -6,12 +6,13 @@ import inquirer from "inquirer";
 import chalk from "chalk";
 import https from "https";
 import { componentDependencies } from "./dependencies.js";
+import { helpTexts } from "./help.js";
 
-// GitHub raw URL for components repo
+// GitHub raw URL
 const GITHUB_BASE =
     "https://raw.githubusercontent.com/Bluejutzu/advantisui-components/main/components";
 
-// Get or create components.json
+// Read or create components.json
 function getConfig() {
     const configPath = path.resolve(process.cwd(), "components.json");
     if (!fs.existsSync(configPath)) {
@@ -23,7 +24,6 @@ function getConfig() {
     try {
         return JSON.parse(fs.readFileSync(configPath, "utf8"));
     } catch {
-        console.log(chalk.red("❌ Failed to read components.json, using defaults."));
         return { outDir: "components/advantisui" };
     }
 }
@@ -46,16 +46,37 @@ async function downloadComponent(name: string, destPath: string) {
                 fileStream.on("finish", () => {
                     fileStream.close((err) => {
                         if (err) reject(err);
-                        else resolve()
-                    })
+                        else resolve();
+                    });
                 });
             })
             .on("error", reject);
     });
 }
 
+// Parse --name argument
+function parseCustomNames(args: string[]): string[] {
+    const nameIndex = args.indexOf("--name");
+    if (nameIndex >= 0 && args[nameIndex + 1]) {
+        return args[nameIndex + 1].split(",");
+    }
+    return [];
+}
+
 async function main() {
-    const [, , command, name] = process.argv;
+    const args = process.argv.slice(2);
+    const command = args[0];
+
+    if (args.includes("-h") || args.includes("--help") || command === "help") {
+        const sub = args[1] as keyof typeof helpTexts;
+
+        if (sub && helpTexts[sub]) {
+            console.log(helpTexts[sub]);
+        } else {
+            console.log(helpTexts.general);
+        }
+        process.exit(0);
+    }
 
     if (command === "list") {
         console.log(chalk.cyan("📦 Available components (GitHub):"));
@@ -65,76 +86,81 @@ async function main() {
         process.exit(0);
     }
 
-    if (command !== "add" || !name) {
-        console.log(chalk.yellow("Usage: npx advantisui add <component>"));
+    if (command !== "add") {
+        console.log(chalk.yellow("Usage: npx advantisui <command> [options]"));
         process.exit(1);
     }
 
+    const components = args.slice(1).filter(a => !a.startsWith("--"));
+    const customNames = parseCustomNames(args);
     const { outDir } = getConfig();
     const targetDir = path.resolve(process.cwd(), outDir);
-    const targetFile = path.join(targetDir, `${name}.tsx`);
-
     if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
-    if (fs.existsSync(targetFile)) {
-        const { overwrite } = await inquirer.prompt([
-            {
-                type: "confirm",
-                name: "overwrite",
-                message: `Component "${name}" already exists. Overwrite?`,
-                default: false,
-            },
-        ]);
-        if (!overwrite) return console.log(chalk.gray("Cancelled."));
-    }
+    for (let i = 0; i < components.length; i++) {
+        const origName = components[i];
+        const fileName = customNames[i] || origName;
+        const targetFile = path.join(targetDir, `${fileName}.tsx`);
 
-    try {
-        await downloadComponent(name, targetFile);
-        console.log(chalk.green(`✅ Added ${name} to ${outDir}/${name}.tsx`));
-    } catch (err: any) {
-        console.error(chalk.red("❌ Failed to fetch component from GitHub."));
-        console.error(err.message);
-        process.exit(1);
-    }
-
-    // === Dependency installer ===
-    const deps = componentDependencies[name] || [];
-    if (deps.length > 0) {
-        console.log(chalk.cyan(`📦 Checking dependencies for ${name}...`));
-        const missing = deps.filter((dep) => {
-            const pkgName = dep.split("@")[0];
-            try {
-                require.resolve(pkgName, { paths: [process.cwd()] });
-                return false;
-            } catch {
-                return true;
-            }
-        });
-
-        if (missing.length > 0) {
-            const { install } = await inquirer.prompt([
+        if (fs.existsSync(targetFile)) {
+            const { overwrite } = await inquirer.prompt([
                 {
                     type: "confirm",
-                    name: "install",
-                    message: `The following dependencies are missing:\n${missing.join(
-                        "\n"
-                    )}\nInstall now?`,
-                    default: true,
+                    name: "overwrite",
+                    message: `Component "${fileName}" already exists. Overwrite?`,
+                    default: false,
                 },
             ]);
-            if (install) {
-                console.log(chalk.blue(`Installing ${missing.join(", ")}...`));
-                execSync(`npm install ${missing.join(" ")}`, { stdio: "inherit" });
-            } else {
-                console.log(chalk.yellow("⚠️  Remember to install them manually."));
+            if (!overwrite) {
+                console.log(chalk.gray("Cancelled."));
+                continue;
             }
-        } else {
-            console.log(chalk.green("✅ All dependencies already installed."));
+        }
+
+        try {
+            await downloadComponent(origName, targetFile);
+            console.log(chalk.green(`✅ Added ${origName} as ${fileName} to ${outDir}`));
+        } catch (err: any) {
+            console.error(chalk.red(`❌ Failed to fetch ${origName}`));
+            console.error(err.message);
+            continue;
+        }
+
+        // Install dependencies using original name
+        const deps = componentDependencies[origName] || [];
+        if (deps.length > 0) {
+            const missing = deps.filter(dep => {
+                const pkgName = dep.split("@")[0];
+                try {
+                    require.resolve(pkgName, { paths: [process.cwd()] });
+                    return false;
+                } catch {
+                    return true;
+                }
+            });
+
+            if (missing.length > 0) {
+                const { install } = await inquirer.prompt([
+                    {
+                        type: "confirm",
+                        name: "install",
+                        message: `Dependencies for ${origName} missing:\n${missing.join(
+                            "\n"
+                        )}\nInstall now?`,
+                        default: true,
+                    },
+                ]);
+                if (install) {
+                    execSync(`npm install ${missing.join(" ")}`, { stdio: "inherit" });
+                } else {
+                    console.log(chalk.yellow("⚠️  Remember to install them manually."));
+                }
+            }
         }
     }
 }
 
-main().catch((err) => {
+main().catch(err => {
     console.error(chalk.red(err));
     process.exit(1);
 });
