@@ -10,13 +10,13 @@ import { helpTexts } from "./help.js";
 
 // GitHub raw URL
 const GITHUB_BASE =
-    "https://raw.githubusercontent.com/Bluejutzu/advantisui-components/main/components";
+    "https://raw.githubusercontent.com/Bluejutzu/advantisui/main/src/components";
 
 // Read or create components.json
 function getConfig() {
     const configPath = path.resolve(process.cwd(), "components.json");
     if (!fs.existsSync(configPath)) {
-        const defaultConfig = { outDir: "components/advantisui" };
+        const defaultConfig = { outDir: "src/components/advantisui" };
         fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
         console.log(chalk.green("✅ Created default components.json"));
         return defaultConfig;
@@ -24,7 +24,7 @@ function getConfig() {
     try {
         return JSON.parse(fs.readFileSync(configPath, "utf8"));
     } catch {
-        return { outDir: "components/advantisui" };
+        return { outDir: "src/components/advantisui" };
     }
 }
 
