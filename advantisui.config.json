@@ -1,0 +1,4 @@
+{
+  "packageManager": "pnpm",
+  "outDir": "src/components/advantisui"
+}
