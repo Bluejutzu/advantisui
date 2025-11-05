@@ -124,26 +124,23 @@ export async function handleUpdateCommand(config: Config) {
     if (modified.length > 0) {
         console.log(chalk.yellow(`⚠️  Modified locally (${modified.length}):`));
         modified.forEach((r) => console.log(chalk.yellow(`   • ${r.component}`)));
-        console.log(chalk.dim("   These won't be updated automatically.\n"));
+        console.log();
     }
 
-    if (outdated.length === 0) {
+    if (outdated.length === 0 && modified.length === 0) {
         console.log(chalk.green("🎉 All components are up to date!"));
         return;
     }
 
-    console.log(chalk.cyan(`📦 Outdated components (${outdated.length}):`));
-    outdated.forEach((r) => console.log(chalk.cyan(`   • ${r.component}`)));
-    console.log();
-
+    // Combine outdated + modified into selectable groups
     const { updateChoice } = await inquirer.prompt<{ updateChoice: "all" | "select" | "none" }>([
         {
             type: "list",
             name: "updateChoice",
-            message: "How would you like to update?",
+            message: "How would you like to update components?",
             choices: [
-                { name: "Update all outdated components", value: "all" },
-                { name: "Select components to update", value: "select" },
+                { name: "Update all outdated + modified components", value: "all" },
+                { name: "Select specific components to update", value: "select" },
                 { name: "Cancel", value: "none" },
             ],
             default: "all",
@@ -156,15 +153,19 @@ export async function handleUpdateCommand(config: Config) {
     }
 
     let componentsToUpdate: string[] = [];
+
     if (updateChoice === "all") {
-        componentsToUpdate = outdated.map((r) => r.component);
+        componentsToUpdate = [...outdated, ...modified].map((r) => r.component);
     } else {
         const { selected } = await inquirer.prompt<{ selected: string[] }>([
             {
                 type: "checkbox",
                 name: "selected",
-                message: "Select components to update:",
-                choices: outdated.map((r) => ({ name: r.component, value: r.component })),
+                message: "Select components to update (will overwrite local changes):",
+                choices: [...outdated, ...modified].map((r) => ({
+                    name: `${r.component}${r.status === "modified" ? " (modified)" : ""}`,
+                    value: r.component,
+                })),
             },
         ]);
         if (selected.length === 0) {
