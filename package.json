@@ -29,7 +29,7 @@
         "inquirer": "^12.10.0"
     },
     "devDependencies": {
-        "@radix-ui/react-slot": "^1.2.3",
+        "@radix-ui/react-slot": "^1.2.4",
         "@types/inquirer": "^9.0.9",
         "@types/node": "^24.10.0",
         "@types/react": "^19.2.2",

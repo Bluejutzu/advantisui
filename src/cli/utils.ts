@@ -4,6 +4,8 @@ import https from "https";
 import crypto from "crypto";
 import chalk from "chalk";
 import inquirer from "inquirer";
+import { execSync } from "child_process";
+import { componentDependencies } from "./dependencies";
 
 export const GITHUB_BASE = "https://raw.githubusercontent.com/Bluejutzu/advantisui/main/src/components";
 const METADATA_FILE = ".advantisui-metadata.json";
@@ -166,13 +168,51 @@ export async function installComponent(
     console.log(chalk.cyan(`📦 Installing ${name}...`));
     try {
         await downloadComponent(name, destPath);
+
         const metadata = loadMetadata(outDir);
+        const deps = componentDependencies[name as keyof typeof componentDependencies] || [];
+
+        if (deps.length > 0 && config) {
+            const missing = deps.filter((dep) => {
+                try {
+                    require.resolve(dep.split("@")[0], { paths: [process.cwd()] });
+                    return false;
+                } catch {
+                    return true;
+                }
+            });
+            if (missing.length > 0) {
+                const { install } = await inquirer.prompt<{ install: boolean }>([
+                    {
+                        type: "confirm",
+                        name: "install",
+                        message: `Missing dependencies for ${chalk.blue(name)}:\n${missing.join("\n")}\n${chalk.yellow("Install now?")}`,
+                        default: true,
+                    },
+                ]);
+                if (install) {
+                    console.log(chalk.gray(`Installing ${missing.length} dependencies using ${chalk.blue(config.packageManager)}${chalk.white("...")}`))
+
+                    if (config.packageManager === "bun" || config.packageManager === "pnpm") {
+                        execSync(`${config.packageManager} add ${missing.join(" ")}`, { stdio: "inherit" });
+                    } else {
+                        execSync(`${config.packageManager} install ${missing.join(" ")}`, { stdio: "inherit" });
+                    }
+                } else {
+                    console.log(chalk.yellow(`⚠️ Remember to install them manually.`));
+                    console.log(chalk.yellow(`${missing.join("\n")}`))
+                }
+            }
+        }
+
+        // Update metadata
         metadata[name] = {
             hash: hashFile(destPath),
             installedAt: new Date().toISOString(),
             lastChecked: new Date().toISOString(),
         };
         saveMetadata(outDir, metadata);
+
         console.log(chalk.green(`✅ Installed ${name}`));
     } catch (err: any) {
         console.error(chalk.red(`❌ Failed to install ${name}: ${err.message}`));
