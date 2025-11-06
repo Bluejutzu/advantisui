@@ -144,6 +144,7 @@ export async function handleUpdateCommand(config: Config) {
 
     if (outdated.length === 0 && modified.length === 0) {
         console.log(chalk.green("🎉 All components are up to date!"));
+        console.log(chalk.yellow(`Please be aware that certain diff's may not be detected. ${chalk.gray("I.e")} ${chalk.red("hover:scale-105")} | ${chalk.green("hover:scale-107")}`))
         return;
     }
 
