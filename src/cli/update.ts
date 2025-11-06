@@ -37,14 +37,23 @@ export async function checkForUpdates(outDir: string) {
             }
 
             const storedHash = metadata[componentName]?.hash;
-            const wasModifiedLocally = storedHash && storedHash !== currentHash;
+            const isDifferentFromRemote = currentHash !== remoteHash;
 
-            if (currentHash === remoteHash) {
+            if (!isDifferentFromRemote) {
                 results.push({ component: componentName, status: "up-to-date" });
-            } else if (wasModifiedLocally) {
-                results.push({ component: componentName, status: "modified" });
+                if (currentHash !== storedHash) {
+                    metadata[componentName] = { ...metadata[componentName], hash: currentHash };
+                }
             } else {
-                results.push({ component: componentName, status: "outdated" });
+                if (storedHash) {
+                    if (storedHash !== remoteHash) {
+                        results.push({ component: componentName, status: "outdated" });
+                    } else {
+                        results.push({ component: componentName, status: "modified" });
+                    }
+                } else {
+                    results.push({ component: componentName, status: "outdated" });
+                }
             }
 
             if (metadata[componentName]) {
@@ -120,6 +129,12 @@ export async function handleUpdateCommand(config: Config) {
         upToDate.forEach((r) => console.log(chalk.gray(`   • ${r.component}`)));
         console.log();
     }
+    
+    if (outdated.length > 0) {
+        console.log(chalk.yellow(`🚨 Outdated (${outdated.length}):`));
+        outdated.forEach((r) => console.log(chalk.yellow(`   • ${r.component}`)));
+        console.log();
+    }
 
     if (modified.length > 0) {
         console.log(chalk.yellow(`⚠️  Modified locally (${modified.length}):`));
@@ -132,7 +147,6 @@ export async function handleUpdateCommand(config: Config) {
         return;
     }
 
-    // Combine outdated + modified into selectable groups
     const { updateChoice } = await inquirer.prompt<{ updateChoice: "all" | "select" | "none" }>([
         {
             type: "list",
