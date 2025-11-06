@@ -9,6 +9,7 @@ import { componentDependencies } from "./dependencies";
 
 export const GITHUB_BASE = "https://raw.githubusercontent.com/Bluejutzu/advantisui/main/src/components";
 const METADATA_FILE = ".advantisui-metadata.json";
+const DEFAULT_OUTDIR = `src/components/${chalk.blue("advantisui")}`
 
 export interface Config {
     outDir: string;
@@ -82,7 +83,7 @@ export async function getConfig(): Promise<Config> {
         try {
             const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
             return {
-                outDir: config.outDir || "components",
+                outDir: config.outDir || DEFAULT_OUTDIR,
                 packageManager: config.packageManager || "npm",
             };
         } catch {
@@ -97,7 +98,7 @@ export async function getConfig(): Promise<Config> {
             type: "input",
             name: "outDir",
             message: "Where should components be installed?",
-            default: "components",
+            default: DEFAULT_OUTDIR,
         },
         {
             type: "list",
