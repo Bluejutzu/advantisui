@@ -15,7 +15,7 @@ export interface ButtonProps
 }
 
 export const buttonVariants = cva(
-  "relative inline-flex items-center justify-center font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2 rounded-xl isolate overflow-hidden hover:scale-107 active:scale-95",
+  "relative inline-flex items-center justify-center font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed gap-2 rounded-xl isolate overflow-hidden hover:scale-105 active:scale-95",
   {
     variants: {
       variant: {
