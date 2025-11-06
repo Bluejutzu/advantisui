@@ -1,7 +1,7 @@
 {
   "name": "advantisui",
   "description": "AdvantisUI - a reusable component library and CLI",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "type": "module",
   "bin": {
     "advantisui": "./dist/index.js"

@@ -40,23 +40,18 @@ export async function checkForUpdates(outDir: string) {
             const isDifferentFromRemote = currentHash !== remoteHash;
 
             if (!isDifferentFromRemote) {
-                console.log(`Hash are not different ${remoteHash} ${currentHash}`)
                 results.push({ component: componentName, status: "up-to-date" });
                 if (currentHash !== storedHash) {
                     metadata[componentName] = { ...metadata[componentName], hash: currentHash };
-                    console.log(`Curr and stored are same ${currentHash} ${storedHash}`)
                 }
             } else {
                 if (storedHash) {
                     if (storedHash !== remoteHash) {
-                        console.log(`Hash are different but stored and remote are not same ${storedHash} ${remoteHash}`)
                         results.push({ component: componentName, status: "outdated" });
                     } else {
-                        console.log(`Hash are different but stored and remote are same  ${storedHash} ${remoteHash}`)
                         results.push({ component: componentName, status: "modified" });
                     }
                 } else {
-                    console.log(`Hashes are differnet but no stored hash`)
                     results.push({ component: componentName, status: "outdated" });
                 }
             }
@@ -152,7 +147,7 @@ export async function handleUpdateCommand(config: Config) {
         return;
     }
 
-    const { updateChoice } = await inquirer.prompt<{ updateChoice: "all" | "select" | "none" }>([
+    const { updateChoice } = await inquirer.prompt<{ updateChoice: "all" | "select" | "force" | "none" }>([
         {
             type: "list",
             name: "updateChoice",
@@ -160,6 +155,7 @@ export async function handleUpdateCommand(config: Config) {
             choices: [
                 { name: "Update all outdated + modified components", value: "all" },
                 { name: "Select specific components to update", value: "select" },
+                { name: "Force update (overwrite all)", value: "force" },
                 { name: "Cancel", value: "none" },
             ],
             default: "all",
@@ -175,6 +171,23 @@ export async function handleUpdateCommand(config: Config) {
 
     if (updateChoice === "all") {
         componentsToUpdate = [...outdated, ...modified].map((r) => r.component);
+    } else if (updateChoice === "force") {
+        const { selected } = await inquirer.prompt<{ selected: string[] }>([
+            {
+                type: "checkbox",
+                name: "selected",
+                message: "Select components to force update (will overwrite local changes):",
+                choices: results.map((r) => ({
+                    name: `${r.component}`,
+                    value: r.component,
+                })),
+            },
+        ]);
+        if (selected.length === 0) {
+            console.log(chalk.gray("No components selected."));
+            return;
+        }
+        componentsToUpdate = selected;
     } else {
         const { selected } = await inquirer.prompt<{ selected: string[] }>([
             {
