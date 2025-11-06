@@ -40,18 +40,23 @@ export async function checkForUpdates(outDir: string) {
             const isDifferentFromRemote = currentHash !== remoteHash;
 
             if (!isDifferentFromRemote) {
+                console.log(`Hash are not different ${remoteHash} ${currentHash}`)
                 results.push({ component: componentName, status: "up-to-date" });
                 if (currentHash !== storedHash) {
                     metadata[componentName] = { ...metadata[componentName], hash: currentHash };
+                    console.log(`Curr and stored are same ${currentHash} ${storedHash}`)
                 }
             } else {
                 if (storedHash) {
                     if (storedHash !== remoteHash) {
+                        console.log(`Hash are different but stored and remote are not same ${storedHash} ${remoteHash}`)
                         results.push({ component: componentName, status: "outdated" });
                     } else {
+                        console.log(`Hash are different but stored and remote are same  ${storedHash} ${remoteHash}`)
                         results.push({ component: componentName, status: "modified" });
                     }
                 } else {
+                    console.log(`Hashes are differnet but no stored hash`)
                     results.push({ component: componentName, status: "outdated" });
                 }
             }
@@ -129,7 +134,7 @@ export async function handleUpdateCommand(config: Config) {
         upToDate.forEach((r) => console.log(chalk.gray(`   • ${r.component}`)));
         console.log();
     }
-    
+
     if (outdated.length > 0) {
         console.log(chalk.yellow(`🚨 Outdated (${outdated.length}):`));
         outdated.forEach((r) => console.log(chalk.yellow(`   • ${r.component}`)));

@@ -9,13 +9,12 @@ Commands:
 `,
 
   add: `
-Usage: npx advantisui add <components...> [--name custom-names]
+Usage: npx advantisui add <components...>
 
 Options:
-  --name <comma-separated>   Custom names for the components in order
   -h, --help                 Show this help message for 'add'
 Examples:
   npx advantisui add button input
-  npx advantisui add button input card --name custom-button,custom-input
+  npx advantisui add button input card
 `,
 };

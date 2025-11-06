@@ -1,4 +1,4 @@
 {
-  "outDir": "components",
+  "outDir": "src/components/advantisui",
   "packageManager": "bun"
 }
