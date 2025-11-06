@@ -64,7 +64,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         {...props}
       >
-        <span className="relative z-[1] inline-flex items-center gap-2">
+        <span className="relative z-[1] inline-flex items-center gap-2 pointer-events-none">
           {isLoading && (
             <svg
               className="animate-spin -ml-1 mr-3 h-4 w-4"
