@@ -1,45 +1,13 @@
 {
-  "name": "advantisui",
-  "description": "AdvantisUI - a reusable component library and CLI",
-  "version": "1.1.6",
-  "type": "module",
-  "bin": {
-    "advantisui": "./dist/index.js"
-  },
-  "files": [
-    "dist",
-    "advantisui.config.json"
+  "name": "advantisui-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
-  "keywords": [
-    "react",
-    "components",
-    "ui",
-    "library"
-  ],
-  "author": "Bluejutzu",
-  "license": "MIT",
   "scripts": {
-    "build": "tsup src/cli/index.ts --format esm --dts"
-  },
-  "dependencies": {
-    "chalk": "^5.6.2",
-    "class-variance-authority": "^0.7.1",
-    "commander": "^14.0.2",
-    "fs-extra": "^11.3.2",
-    "inquirer": "^12.10.0"
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "@radix-ui/react-slot": "^1.2.4",
-    "@types/inquirer": "^9.0.9",
-    "@types/node": "^24.10.0",
-    "@types/react": "^19.2.2",
-    "clsx": "^2.1.1",
-    "react": "^19.2.0",
-    "tailwind-merge": "^3.3.1",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.3"
-  },
-  "publishConfig": {
-    "access": "public"
+    "prettier": "^3.0.0"
   }
 }

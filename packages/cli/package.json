@@ -1,0 +1,32 @@
+{
+  "name": "@advantisui/cli",
+  "version": "1.1.6",
+  "description": "CLI for AdvantisUI",
+  "type": "module",
+  "bin": {
+    "advantisui": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "dev": "tsup src/index.ts --format esm --dts --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2",
+    "fs-extra": "^11.3.2",
+    "inquirer": "^12.10.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^24.10.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
